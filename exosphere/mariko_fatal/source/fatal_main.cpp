@@ -16,11 +16,14 @@
 #include <exosphere.hpp>
 #include "fatal_sdmmc.hpp"
 #include "fatal_save_context.hpp"
+#include "fatal_sound.hpp"
 #include "fatal_display.hpp"
 
 namespace ams::secmon::fatal {
 
     namespace {
+
+        constexpr inline int I2cAddressMax77620Pmic = 0x3C;
 
         ALWAYS_INLINE const ams::impl::FatalErrorContext *GetFatalErrorContext() {
             return MemoryRegionVirtualTzramMarikoProgramFatalErrorContext.GetPointer<ams::impl::FatalErrorContext>();
@@ -58,18 +61,36 @@ namespace ams::secmon::fatal {
             AMS_SECMON_LOG("Failed to save fatal error context: %08x\n", result.GetValue());
         }
 
+        /* Ensure that i2c-1/i2c-5 are usable for communicating with the audio device/pmic. */
+        clkrst::EnableI2c1Clock();
+        clkrst::EnableI2c5Clock();
+        i2c::Initialize(i2c::Port_1);
+        i2c::Initialize(i2c::Port_5);
+
+        /* Shut down audio. */
+        {
+            StopSound();
+        }
+
         /* Display the fatal error. */
         {
             AMS_SECMON_LOG("Showing Display, LCD Vendor = %04x\n", GetLcdVendor());
             InitializeDisplay();
             ShowDisplay(f_ctx, result);
-            FinalizeDisplay();
         }
 
         /* Ensure we have nothing waiting to be logged. */
         AMS_LOG_FLUSH();
 
-        /* TODO: Wait for a button press, then reboot. */
+        /* Wait for power button to be pressed. */
+        while (!pmic::IsPowerButtonPressed()) {
+            util::WaitMicroSeconds(100);
+        }
+
+        /* Reboot. */
+        pmic::ShutdownSystem(true);
+
+        /* Wait for our reboot to complete. */
         AMS_INFINITE_LOOP();
     }
 
