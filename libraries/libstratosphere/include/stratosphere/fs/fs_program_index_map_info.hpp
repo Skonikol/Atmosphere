@@ -14,13 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #pragma once
-#include "../fs/fs_common.hpp"
-#include "../fs/fs_path_tool.hpp"
+#include <stratosphere/fs/fs_common.hpp>
 
-namespace ams::fssystem {
+namespace ams::fs {
 
-    namespace StringTraits = ::ams::fs::StringTraits;
-
-    using PathTool = ::ams::fs::PathTool;
+    struct ProgramIndexMapInfo {
+        ncm::ProgramId program_id;
+        ncm::ProgramId base_program_id;
+        u8 program_index;
+        u8 pad[0xF];
+    };
+    static_assert(util::is_pod<ProgramIndexMapInfo>::value);
+    static_assert(sizeof(ProgramIndexMapInfo) == 0x20);
 
 }
