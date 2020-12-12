@@ -13,21 +13,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#pragma once
+#include <mesosphere.hpp>
 
-#if defined(AMS_BUILD_FOR_AUDITING)
-#define MESOSPHERE_BUILD_FOR_AUDITING
-#endif
+namespace ams::kern {
 
-#if defined(MESOSPHERE_BUILD_FOR_AUDITING) || defined(AMS_BUILD_FOR_DEBUGGING)
-#define MESOSPHERE_BUILD_FOR_DEBUGGING
-#endif
+    /* This overrides the panic implementation from the kernel, to prevent linking debug print into kldr. */
 
-#ifdef  MESOSPHERE_BUILD_FOR_DEBUGGING
-#define MESOSPHERE_ENABLE_ASSERTIONS
-#define MESOSPHERE_ENABLE_DEBUG_PRINT
-#define MESOSPHERE_ENABLE_KERNEL_STACK_USAGE
-#endif
+    NORETURN void PanicImpl(const char *file, int line, const char *format, ...) {
+        MESOSPHERE_UNUSED(file, line, format);
+        MESOSPHERE_INIT_ABORT();
+    }
 
-//#define MESOSPHERE_BUILD_FOR_TRACING
-#define MESOSPHERE_ENABLE_PANIC_REGISTER_DUMP
+    NORETURN void PanicImpl() {
+        MESOSPHERE_INIT_ABORT();
+    }
+
+}
