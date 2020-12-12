@@ -1,4 +1,4 @@
-TOPTARGETS := all clean dist-no-debug dist
+TOPTARGETS := dist-no-debug clean all dist
 AMSBRANCH := $(shell git symbolic-ref --short HEAD)
 AMSHASH := $(shell git rev-parse --short HEAD)
 AMSREV := $(AMSBRANCH)-$(AMSHASH)
